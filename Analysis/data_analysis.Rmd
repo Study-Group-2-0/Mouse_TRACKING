@@ -1,0 +1,76 @@
+---
+title: "data_analysis"
+author: "Gustav Helms"
+date: "3/24/2021"
+output: html_document
+---
+
+```{r}
+# Loading packages
+pacman::p_load(tidyverse)
+```
+
+
+```{r}
+############################## PREPROCESSING FUNCTIONS ################################### 
+# Columns to select
+columns <- c("accuracy", "avg_rt","correct", "correct_answer", "datetime", "initiation_time", "left_option", "pair","practice","response","response_time","right_option","subject_nr","syllabus","time_block_sequence","time_experiment","time_experimental_loop","time__0_syllables_1","time__1_syllables","time__2_syllables_1","time__3_syllables_1","total_correct","total_response_time")
+
+
+# Function for extracting all coordinates
+position_extracter <- function(data,output_col, by = pair ){
+hep <- data %>% 
+  select(pair, starts_with(output_col)) %>% 
+  pivot_longer(cols = starts_with(output_col),
+               values_to = output_col) %>% 
+  mutate(name = str_extract(name, pattern = "\\d{1,2}")) %>% 
+  filter(name == pair) %>% 
+  select(-c(name))
+}
+
+# Preproccesing function
+preproccesing <- function(filename){
+  
+  # Reading the data
+  df <- read_csv(paste0("data/", filename)) %>% 
+    
+  #Selecting relevant columns
+  select(c(columns,
+           xpos_mousetrap_response_1:ypos_mousetrap_response_9,
+           timestamps_mousetrap_response_1:timestamps_mousetrap_response_9 )) %>% 
+  # Renaming stupid columnnames
+  rename(xpos_mousetrap_response_7 = xpos_mousetrap_response_8_1,
+         ypos_mousetrap_response_7 = ypos_mousetrap_response_8_1,
+         timestamps_mousetrap_response_7 = timestamps_mousetrap_response_8_1)
+
+# Using the extract function
+timestamps <- position_extracter(df, "timestamps")
+xpos <- position_extracter(df, "xpos")
+ypos <- position_extracter(df, "ypos")
+
+# merging the new data frames
+coordinates <- merge(xpos, ypos)
+timestamps <- merge(coordinates, timestamps)
+df <- merge(df, timestamps, by = "pair") %>% 
+  # deselecting irrelevant columns 
+  select(-c(
+    starts_with("timestamps_"),
+    starts_with("xpos_"),
+    starts_with("ypos_")
+  ))
+
+# returning final df
+return(df)
+}
+
+```
+
+
+```{r}
+################################# IMPORTING THE DATA ##########################################
+
+df <- list.files(path = "data/", pattern = ".csv") %>% 
+  map_df(preproccesing)
+
+```
+

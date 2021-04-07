@@ -74,3 +74,10 @@ df <- list.files(path = "data/", pattern = ".csv") %>%
 
 ```
 
+
+```{r}
+hep <- read_csv("subject-0.csv")
+
+colnames(hep)
+```
+

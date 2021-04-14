@@ -1,0 +1,164 @@
+---
+title: "sigrid_mus"
+author: "Sigrid"
+date: "4/14/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#loading packages
+pacman::p_load(tidyverse, mousetrap, readbulk)
+```
+
+```{r}
+# loading data
+df <- list.files(path = "/Users/sigridagersnap/Documents/R studio data/4_semester/Mouse_TRACKING/Analysis/", pattern = ".csv") %>% 
+  map_df(read_csv)
+```
+
+
+```{r}
+#################### Wrangling data frame #########################
+
+# deselect practice + only correct answers
+df <- select(df, -c(ends_with('practice'))) %>% 
+  filter(correct == '1'
+)
+
+# dividing into two different data frames right/left
+df_right <- filter(df, correct_answer == 'right_option')
+df_left <- filter(df, correct_answer == 'left_option')
+
+#left df
+df_left <- mt_import_mousetrap(
+  df_left,
+  xpos_label = "xpos_mousetrap_response",
+  ypos_label = "ypos_mousetrap_response",
+  timestamps_label = "timestamps_mousetrap_response"
+)
+
+#right df
+df_right <- mt_import_mousetrap(
+  df_right,
+  xpos_label = "xpos_mousetrap_response",
+  ypos_label = "ypos_mousetrap_response",
+  timestamps_label = "timestamps_mousetrap_response"
+)
+```
+
+```{r}
+############### LEFT PLOT ###################
+#plot
+mt_plot(df_left, use2 = syllables)
+
+# remapping, changing y-values
+df_remap_left <- mt_remap_symmetric(
+  df_left,
+  dimensions = c("xpos", "ypos"),
+  remap_xpos = "no",
+  remap_ypos = "up")
+
+
+# plotting again, looks better now
+mt_plot(df_remap_left)
+
+# plotting the syllables
+mt_plot(
+  df_remap_left, 
+  use = 'trajectories',
+  color = 'syllables'
+  )
+
+#aggregating
+mt_plot_aggregate(
+  df_remap_left, 
+  use = 'trajectories',
+  color = 'syllables'
+)
+
+# aligning
+df_align_left <- mt_align(
+  df_remap_left,
+  coordinates = c(0,-150,-200,200)
+)
+
+#aggregate again
+mt_plot_aggregate(
+  df_align_left, 
+  use = 'trajectories',
+  color = 'syllables'
+)
+
+# normalizing
+df_norm_left <- mt_time_normalize(
+  df_align_left,
+  nsteps = 4)
+
+# aggregate plot again
+mt_plot_aggregate(
+  df_norm_left,
+  use = 'tn_trajectories',
+  color = 'syllables'
+)
+
+```
+```{r}
+################### RIGHT PLOT ###############
+#plot
+mt_plot(df_right, use2 = syllables)
+
+# remapping, changing y-values
+df_remap_right <- mt_remap_symmetric(
+  df_right,
+  dimensions = c("xpos", "ypos"),
+  remap_xpos = "no",
+  remap_ypos = "up")
+
+# plotting again, looks better now
+mt_plot(df_remap_right)
+
+# plotting the syllables
+mt_plot(
+  df_remap_right, 
+  use = 'trajectories',
+  color = 'syllables'
+  )
+
+# aggregate plot
+mt_plot_aggregate(
+  df_remap_right, 
+  use = 'trajectories',
+  color = 'syllables'
+)
+
+#aligning
+df_align_right <- mt_align(
+  df_remap_right,
+  coordinates = c(0,-150,200,200)
+)
+
+# aggregate plot again
+mt_plot_aggregate(
+  df_align_right, 
+  use = 'trajectories',
+  color = 'syllables'
+)
+
+# normalizing
+df_norm_right <- mt_time_normalize(
+  df_align_right,
+  nsteps = 4)
+
+# aggregate plot AGAIN
+mt_plot_aggregate(
+  df_norm_right,
+  use = 'tn_trajectories',
+  color = 'syllables'
+) + theme_classic() +
+  labs(title = 'Fantastic experiment')
+```
+

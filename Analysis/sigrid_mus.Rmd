@@ -11,13 +11,30 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 #loading packages
-pacman::p_load(tidyverse, mousetrap, readbulk)
+pacman::p_load(tidyverse, mousetrap, readbulk, wesanderson, RColorBrewer)
 ```
+
+```{r}
+# setting up the color theme for plotting
+wes_palette('Darjeeling1')
+wes_palette('Royal1')
+
+# changing the default theme when plotting
+theme_set(
+  theme_default()  +
+    theme(plot.background = element_rect(fill = wes_palette("Royal1")[3],
+                                         color = wes_palette("Royal1")[3])
+          ))
+
+scale_color_brewer(palette = 'Set1') +
+```
+
 
 ```{r}
 # loading data
 df <- list.files(path = "/Users/sigridagersnap/Documents/R studio data/4_semester/Mouse_TRACKING/Analysis/", pattern = ".csv") %>% 
   map_df(read_csv)
+
 ```
 
 
@@ -102,10 +119,12 @@ df_norm_left <- mt_time_normalize(
 mt_plot_aggregate(
   df_norm_left,
   use = 'tn_trajectories',
-  color = 'syllables'
-)
+  color = 'syllables') + 
+  labs(title = 'When the left option is the right answer')
 
 ```
+
+
 ```{r}
 ################### RIGHT PLOT ###############
 #plot
@@ -156,9 +175,12 @@ df_norm_right <- mt_time_normalize(
 # aggregate plot AGAIN
 mt_plot_aggregate(
   df_norm_right,
-  use = 'tn_trajectories',
-  color = 'syllables'
-) + theme_classic() +
-  labs(title = 'Fantastic experiment')
+  color = 'syllables',
+  use = 'tn_trajectories') + 
+  labs(title = 'When the right option is the correct answer') 
+
+# wes_palette('Darjeeling1')
+# doesn't work 
+# scale_fill_manual(values = wes_palette(n = 4, name = 'Darjeeling1'))
 ```
 

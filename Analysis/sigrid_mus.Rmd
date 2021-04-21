@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 #loading packages
-pacman::p_load(tidyverse, mousetrap, readbulk, wesanderson, RColorBrewer)
+pacman::p_load(tidyverse, mousetrap, readbulk, wesanderson, RColorBrewer, patchwork)
 ```
 
 ```{r}
@@ -35,6 +35,7 @@ scale_color_brewer(palette = 'Set1') +
 df <- list.files(path = "/Users/sigridagersnap/Documents/R studio data/4_semester/Mouse_TRACKING/Analysis/", pattern = ".csv") %>% 
   map_df(read_csv)
 
+getwd()
 ```
 
 
@@ -116,11 +117,12 @@ df_norm_left <- mt_time_normalize(
   nsteps = 4)
 
 # aggregate plot again
-mt_plot_aggregate(
+left <- mt_plot_aggregate(
   df_norm_left,
   use = 'tn_trajectories',
   color = 'syllables') + 
-  labs(title = 'When the left option is the right answer')
+  labs(title = 'When the left option is the correct answer')+
+  theme_classic()
 
 ```
 
@@ -173,14 +175,74 @@ df_norm_right <- mt_time_normalize(
   nsteps = 4)
 
 # aggregate plot AGAIN
-mt_plot_aggregate(
+right <- mt_plot_aggregate(
   df_norm_right,
   color = 'syllables',
   use = 'tn_trajectories') + 
-  labs(title = 'When the right option is the correct answer') 
+  labs(title = 'When the right option is the correct answer') +
+  theme_classic()
 
 # wes_palette('Darjeeling1')
 # doesn't work 
 # scale_fill_manual(values = wes_palette(n = 4, name = 'Darjeeling1'))
+```
+
+
+```{r fig.width = 10, fig.height = 5}
+left + right
+```
+
+```{r}
+# making one plot!
+
+mt_plot(
+  df_left,
+  use = 'trajectories',
+  color = 'syllables'
+)
+
+# remapping, changing y-values
+df_remap_left_right <- mt_remap_symmetric(
+  df_left,
+  dimensions = c("xpos", "ypos"),
+  remap_xpos = "right",
+  remap_ypos = "up")
+
+# plotting the syllables
+mt_plot(
+  df_remap_left_right, 
+  use = 'trajectories',
+  color = 'syllables'
+  )
+
+#aligning
+df_align_left_right <- mt_align(
+  df_remap_left_right,
+  coordinates = c(0,-150,200,200)
+)
+
+# aggregate plot again
+mt_plot_aggregate(
+  df_align_left_right, 
+  use = 'trajectories',
+  color = 'syllables'
+)
+
+# normalizing
+df_norm_left_right <- mt_time_normalize(
+  df_align_left_right,
+  nsteps = 4)
+
+# aggregate plot AGAIN
+mt_plot_aggregate(
+  df_norm_left_right,
+  color = 'syllables',
+  use = 'tn_trajectories') +
+  labs(title = 'When the right option is the correct answer') +
+  theme_classic()
+
+df_new <- rbind(df_remap_left, df_remap_left_right)
+
+# doesn't work with mouse trap objects
 ```
 
